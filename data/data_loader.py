@@ -12,9 +12,14 @@ from torch.utils.data import Dataset
 windows = {'hamming': scipy.signal.hamming, 'hann': scipy.signal.hann, 'blackman': scipy.signal.blackman,
            'bartlett': scipy.signal.bartlett}
 
+def __load_audio_file_safetly(path):
+    try:
+        return torchaudio.load(path.encode('utf-8'))  # py3 fix
+    except:
+        return torchaudio.load(path)
 
 def load_audio(path):
-    sound, _ = torchaudio.load(path.encode('utf-8'))  # py3 fix
+    sound, _ = __load_audio_file_safetly(path)
     sound = sound.numpy()
     if len(sound.shape) > 1:
         if sound.shape[1] == 1:
