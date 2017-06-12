@@ -36,6 +36,7 @@ parser.add_argument('--silent', dest='silent', action='store_true', help='Turn o
 parser.add_argument('--checkpoint', dest='checkpoint', action='store_true', help='Enables checkpoint saving of model')
 parser.add_argument('--checkpoint_per_batch', default=0, type=int, help='Save checkpoint per batch. 0 means never save')
 parser.add_argument('--visdom', dest='visdom', action='store_true', help='Turn on visdom graphing')
+parser.add_argument('--visdom-server', dest='visdom_server', action='store_true', help='Visdom server url')
 parser.add_argument('--save_folder', default='models/', help='Location to save epoch models')
 parser.add_argument('--final_model_path', default='models/deepspeech_final.pth.tar',
                     help='Location to save final model')
@@ -52,7 +53,7 @@ parser.add_argument('--noise_max', default=0.5,
 parser.add_argument('--tensorboard', dest='tensorboard', action='store_true', help='Turn on tensorboard graphing')
 parser.add_argument('--log_dir', default='visualize/deepspeech_final', help='Location of tensorboard log')
 parser.add_argument('--log_params', dest='log_params', action='store_true', help='Log parameter values and gradients')
-parser.set_defaults(cuda=False, silent=False, checkpoint=False, visdom=False, augment=False, tensorboard=False, log_params=False)
+parser.set_defaults(cuda=False, silent=False, checkpoint=False, visdom=False, visdom_server='http://localhost', augment=False, tensorboard=False, log_params=False)
 
 def to_np(x):
     return x.data.cpu().numpy()
@@ -82,7 +83,7 @@ def main():
     loss_results, cer_results, wer_results = None, None, None
     if args.visdom:
         from visdom import Visdom
-        viz = Visdom()
+        viz = Visdom(server=args.visdom_server)
 
         opts = [dict(title='Loss', ylabel='Loss', xlabel='Epoch'),
                 dict(title='WER', ylabel='WER', xlabel='Epoch'),
