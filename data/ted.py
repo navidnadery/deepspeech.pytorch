@@ -116,9 +116,9 @@ def main():
     prepare_dir(test_ted_dir)
     print('Creating manifests...')
 
-    create_manifest(train_ted_dir, 'ted_train')
-    create_manifest(val_ted_dir, 'ted_val')
-    create_manifest(test_ted_dir, 'ted_test')
+    create_manifest(train_ted_dir, 'ted_train', target_dl_dir)
+    create_manifest(val_ted_dir, 'ted_val', target_dl_dir)
+    create_manifest(test_ted_dir, 'ted_test', target_dl_dir)
 
 
 if __name__ == "__main__":

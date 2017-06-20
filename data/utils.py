@@ -12,8 +12,8 @@ def update_progress(progress):
                                                   progress * 100), end="")
 
 
-def create_manifest(data_path, tag, ordered=True):
-    manifest_path = '%s_manifest.csv' % tag
+def create_manifest(data_path, tag, ordered=True, target_folder=None):
+    manifest_path = '%s/%s_manifest.csv' % (target_folder, tag) if target_folder else "%s_manifest.csv" % tag
     file_paths = []
     wav_files = [os.path.join(dirpath, f)
                  for dirpath, dirnames, files in os.walk(data_path)
