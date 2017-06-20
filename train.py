@@ -5,14 +5,18 @@ import os
 import time
 
 import torch
+torch.backends.cudnn.enabled = False
+
 from torch.autograd import Variable
-from torch.backends import cudnn
 from warpctc_pytorch import CTCLoss
 
 from data.bucketing_sampler import BucketingSampler, SpectrogramDatasetWithLength
 from data.data_loader import AudioDataLoader, SpectrogramDataset
 from decoder import ArgMaxDecoder
 from model import DeepSpeech, supported_rnns
+
+
+
 
 parser = argparse.ArgumentParser(description='DeepSpeech training')
 parser.add_argument('--train_manifest', metavar='DIR',
@@ -38,7 +42,7 @@ parser.add_argument('--silent', dest='silent', action='store_true', help='Turn o
 parser.add_argument('--checkpoint', dest='checkpoint', action='store_true', help='Enables checkpoint saving of model')
 parser.add_argument('--checkpoint_per_batch', default=0, type=int, help='Save checkpoint per batch. 0 means never save')
 parser.add_argument('--visdom', dest='visdom', action='store_true', help='Turn on visdom graphing')
-parser.add_argument('--visdom-server', dest='visdom_server', action='store_true', help='Visdom server url')
+parser.add_argument('--visdom-server', help='Visdom server url')
 parser.add_argument('--save_folder', default='models/', help='Location to save epoch models')
 parser.add_argument('--final_model_path', default='models/deepspeech_final.pth.tar',
                     help='Location to save final model')
@@ -206,6 +210,7 @@ def main():
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
+    inf = float("inf")
 
     for epoch in range(start_epoch, args.epochs):
         model.train()
@@ -216,7 +221,7 @@ def main():
             inputs, targets, input_percentages, target_sizes = data
             # measure data loading time
             data_time.update(time.time() - end)
-            inputs = Variable(inputs, requires_grad=False)
+            inputs = Variable(inputs, requires_grad=True)
             target_sizes = Variable(target_sizes, requires_grad=False)
             targets = Variable(targets, requires_grad=False)
 
@@ -233,7 +238,7 @@ def main():
             loss = loss / inputs.size(0)  # average the loss by minibatch
 
             loss_sum = loss.data.sum()
-            inf = float("inf")
+
             if loss_sum == inf or loss_sum == -inf:
                 print("WARNING: received an inf loss, setting loss value to 0")
                 loss_value = 0
@@ -285,7 +290,7 @@ def main():
         for i, (data) in enumerate(test_loader):  # test
             inputs, targets, input_percentages, target_sizes = data
 
-            inputs = Variable(inputs, volatile=True)
+            inputs = Variable(inputs, volatile=True, requires_grad=False)
 
             # unflatten targets
             split_targets = []
@@ -300,7 +305,7 @@ def main():
             out = model(inputs)
             out = out.transpose(0, 1)  # TxNxH
             seq_length = out.size(0)
-            sizes = Variable(input_percentages.mul_(int(seq_length)).int(), volatile=True)
+            sizes = Variable(input_percentages.mul_(int(seq_length)).int(), volatile=True, requires_grad=False)
 
             decoded_output = decoder.decode(out.data, sizes)
             target_strings = decoder.process_strings(decoder.convert_to_strings(split_targets))
@@ -381,5 +386,4 @@ def main():
 
 
 if __name__ == '__main__':
-    cudnn.enabled = False
     main()
